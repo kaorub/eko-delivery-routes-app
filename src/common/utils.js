@@ -7,6 +7,7 @@ export class Calc {
     constructor({ edges }) {
         this.graph = this.getGraphFromRoute(edges)
         this.limitStops = Infinity
+        this.limitCost = Infinity
         this.isRoundTrack = false
         this.canRepeat = false
 
@@ -14,6 +15,8 @@ export class Calc {
         this.visited = {}
         this.path = []
         this.counter = 0
+        this.stops = 0
+        this.cost = 0
 
         this.isFirstRound = true
     }
@@ -43,26 +46,31 @@ export class Calc {
      * @param {string} start - start town
      * @param {string} finish - finish town (destination)
      * @param {array} path - variable to store possible paths
-     * @param {array} stops - variable to store count of stops done during the search
+     * @param {number} stops - variable to store count of stops done during the search
      * @param {number} cost - variable to store total cost to reach the destination town
      */
     getPossibleRoutes (start, finish, path = [], stops = 0, cost = 0) {
         this.visited[start] = true
         path.push(start)
         stops += 1
-        cost += this.getCost(start, finish)
 
-        if ((start === finish && !this.isFirstRound) || stops >= this.limitStops || cost >= this.limitCost) {
-            console.log(path)
+        if ((start === finish && !this.isFirstRound && !this.canRepeat)
+            || stops >= this.limitStops
+            || (!this.isFirstRound && this.limitCost !== Infinity && start === finish && cost < this.limitCost)
+        ) {
             this.counter += 1
+            console.log(path, cost, this.counter)
             stops = 0
-            cost = 0
         } else {
             const destinations = Object.keys(this.graph.nodes.get(start))
             for (let i=0; i<destinations.length; i++) {
                 const dest = destinations[i]
                 if (!this.visited[dest] || this.canRepeat || this.isRoundTrack) {
                     this.isFirstRound = false
+                    cost += this.getCost(start, dest)
+                    if (this.limitCost !== Infinity && cost >= this.limitCost) {
+                        return
+                    }
                     this.getPossibleRoutes(dest, finish, path, stops, cost)
                 }
             }
@@ -98,7 +106,7 @@ export class Calc {
     /**
      * @private
      * Set limitation of stops
-     * @param limitStops
+     * @param {number} limitStops
      */
     setLimitStops (limitStops) {
         this.limitStops = limitStops
@@ -107,7 +115,7 @@ export class Calc {
     /**
      * @private
      * Set the condition if the start and destination towns are the same
-     * @param boolean isRoundTrack
+     * @param {boolean} isRoundTrack
      */
     setIsRoundTrack (isRoundTrack) {
         this.isRoundTrack = isRoundTrack
@@ -116,10 +124,19 @@ export class Calc {
     /**
      * @private
      * Set the condition if the same route can used twice in a delivery route
-     * @param boolean canRepeat
+     * @param {boolean} canRepeat
      */
     setCanRepeat (canRepeat) {
         this.canRepeat = canRepeat
+    }
+
+    /**
+     * @private
+     * Set the counter to value
+     * @param {number} canRepeat
+     */
+    setCounter (counter) {
+        this.counter = counter
     }
 
     /**
@@ -139,12 +156,13 @@ export class Calc {
      */
     run (start, finish, ...args) {
         const { isRoundTrack, limitStops, limitCost, canRepeat } = args[0]
+        this.setCounter(0)
         this.setVisited()
         this.setLimitStops(limitStops || Infinity)
         this.setLimitCost(limitCost || Infinity)
         this.setIsRoundTrack(isRoundTrack)
         this.setCanRepeat(canRepeat)
-        this.getPossibleRoutes(start, finish, this.path)
+        this.getPossibleRoutes(start, finish, this.path, this.stops, this.cost)
         return this.counter
     }
     /**
