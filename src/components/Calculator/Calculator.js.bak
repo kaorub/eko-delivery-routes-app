@@ -1,0 +1,77 @@
+import React, { useState } from 'react';
+import Button from '@material-ui/core/Button';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import {getCostForRoute, getGraphFromRoute} from '../../common/utils';
+import Grid from "@material-ui/core/Grid";
+
+function Calculator() {
+    const [edges, setEdges] = useState('AB1, AC4, AD10, BE3, CD4, CF2, DE1, EB3, EA2, FD1');
+    const [route, setRoute] = useState('A-B-E');
+    const [graph, setGraph] = useState(null);
+    const [cost, setCost] = useState(0);
+
+    const setUpGraphStructure = () => {
+        const graph = getGraphFromRoute(edges)
+        setGraph(graph)
+        console.log(graph)
+    }
+
+    const handleEdgesChange = (event) => {
+        setEdges(event.target.value)
+    }
+
+    const calculateCostForRoute = () => {
+        const cost = getCostForRoute(route, graph)
+        console.log(cost)
+        setCost(cost)
+    }
+
+    const handleRouteChange = (event) => {
+        setRoute(event.target.value)
+    }
+
+    return (
+        <Grid container spacing={3} className="Calculator">
+            <Grid item xs={12}>
+                <FormControl>
+                    <InputLabel htmlFor="component-edges">Edges</InputLabel>
+                    <Input
+                        id="component-edges"
+                        value={edges}
+                        onChange={handleEdgesChange}
+                        aria-describedby="component-edges-helper-text"
+                    />
+                    <FormHelperText id="component-edges-helper-text">Input edges divided by ',' in a string</FormHelperText>
+                </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={() => { setUpGraphStructure(edges) }}>
+                    Set up graph from edges
+                </Button>
+            </Grid>
+            <Grid item xs={12}>
+                <FormControl>
+                    <InputLabel htmlFor="component-route">Route</InputLabel>
+                    <Input
+                        id="component-route"
+                        value={route}
+                        onChange={handleRouteChange}
+                        aria-describedby="component-route-helper-text"
+                    />
+                    <FormHelperText id="component-route-helper-text">Input route i.e. 'AB1'</FormHelperText>
+                </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={() => { calculateCostForRoute(route) }}>
+                    Find cost for route
+                </Button>
+            </Grid>
+            { cost }
+        </Grid>
+    );
+}
+
+export default Calculator;
