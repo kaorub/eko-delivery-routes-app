@@ -22,6 +22,7 @@ function CostCalculator({ calc }) {
     }
 
     const handleRouteChange = (event) => {
+        setErr('')
         setRoute(event.target.value)
     }
 

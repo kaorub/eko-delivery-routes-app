@@ -10,15 +10,28 @@ import Paper from "@material-ui/core/Paper";
 function RouteCasesCalculator({ calc }) {
     const [path, setPath] = useState('ED');
     const [cases, setCases] = useState(0);
+    const [condition, setCondition] = useState('{}');
+    const [err, setErr] = useState('');
 
     const calculateCasesForPath = () => {
-        const [START, FINISH] = path
-        const count = calc.run(START, FINISH, {})
-        setCases(count)
+        try {
+            const parsed = JSON.parse(JSON.stringify(condition))
+            const [START, FINISH] = path
+            const count = calc.run(START, FINISH, parsed)
+            setCases(count)
+        } catch (err) {
+            setErr('Parsing the condition failed: ' + err)
+        }
     }
 
     const handlePathChange = (event) => {
+        setErr('')
         setPath(event.target.value)
+    }
+
+    const handleConditionChange = (event) => {
+        setErr('')
+        setCondition(event.target.value)
     }
 
     return (
@@ -36,6 +49,20 @@ function RouteCasesCalculator({ calc }) {
                 </FormControl>
             </Grid>
             <Grid item xs={12}>
+                <FormControl>
+                    <InputLabel htmlFor="component-conditions">Conditions in JSON</InputLabel>
+                    <Input
+                        id="component-conditions"
+                        value={condition}
+                        onChange={handleConditionChange}
+                        aria-describedby="component-conditions-helper-text"
+                    />
+                    <FormHelperText id="component-conditions-helper-text">
+                        Input conditions on JSON format with parameters limitCost, limitStops, isRoundTrack, canRepeat }"
+                    </FormHelperText>
+                </FormControl>
+            </Grid>
+            <Grid item xs={12}>
                 <Button variant="contained" color="primary" onClick={() => { calculateCasesForPath(path) }}
                     disabled={!calc}
                 >
@@ -43,9 +70,12 @@ function RouteCasesCalculator({ calc }) {
                 </Button>
             </Grid>
             <Grid item xs={12}>
-                <Paper variant="outlined" >
+                {cases && <Paper variant="outlined" >
                     Possible routes count: { cases }
-                </Paper>
+                </Paper>}
+                {err && <Paper variant="outlined" >
+                    Error: { err }
+                </Paper>}
             </Grid>
         </React.Fragment>
     );
